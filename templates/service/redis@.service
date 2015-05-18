@@ -1,0 +1,24 @@
+[Unit]
+Description=Redis web server service
+Requires=etcd.service
+Requires=docker.service
+Requires=redis-discovery@%i.service
+
+After=etcd.service
+After=docker.service
+Before=redis-discovery@%i.service
+
+[Service]
+TimeoutStartSec=0
+KillMode=none
+
+# Get CoreOS environmental variables
+EnvironmentFile=/etc/environment
+
+ExecStartPre=-/usr/bin/docker kill redis%i
+ExecStartPre=-/usr/bin/docker rm redis%i
+ExecStartPre=/usr/bin/docker pull redis
+ExecStart=/usr/bin/docker run -d --name redis%i -p 6379:6379 redis redis-server /etc/redis/redis.conf --requirepass thelastoftheflyingd0g5
+
+[X-Fleet]
+Conflicts=redis@%i.service
